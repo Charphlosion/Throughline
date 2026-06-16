@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#1b2030" />
+<title>Throughline — your day, in logical order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* surfaces */
+    --bg:#f3f4f8;
+    --bg-grad-a:#eef0f6;
+    --bg-grad-b:#f6f5f2;
+    --surface:#ffffff;
+    --surface-2:#fafbfc;
+    --ink:#191d27;
+    --muted:#6a7180;
+    --faint:#9aa1ad;
+    --line:#e6e8ef;
+    --line-strong:#d6d9e2;
+    --accent:#3f3d8f;       /* deep indigo — primary actions */
+    --accent-soft:#ecebff;
+    --shadow:0 1px 2px rgba(25,29,39,.05), 0 8px 24px rgba(25,29,39,.06);
+    --shadow-pop:0 12px 40px rgba(25,29,39,.18);
+    --radius:14px;
+    --radius-sm:10px;
+
+    /* domain colours */
+    --d-house:#c2691f;
+    --d-work:#2563c9;
+    --d-lifeadmin:#7b51d8;
+    --d-health:#168a5b;
+    --d-creativity:#cb2d83;
+    --d-shopping:#0e8aa6;
+
+    /* importance colours (the priority dot) */
+    --i-accountable:#d63b3b;
+    --i-mandatory:#e0701c;
+    --i-necessary:#d3a017;
+    --i-preferable:#2f7fd1;
+    --i-optional:#9aa1ad;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 100% -10%, var(--bg-grad-b), transparent 60%),
+      radial-gradient(900px 500px at -10% 0%, var(--bg-grad-a), transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    line-height:1.45;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;font-size:15px;color:var(--ink)}
+  ::placeholder{color:var(--faint)}
+
+  .wrap{max-width:860px;margin:0 auto;padding:0 16px 120px;width:100%}
+
+  /* ---------- header ---------- */
+  header.app{
+    padding:26px 0 14px;
+    display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+  .brand{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .brand h1{
+    font-family:'Fraunces',serif;font-weight:600;font-size:30px;letter-spacing:-.01em;
+    margin:0;line-height:1;color:var(--ink);
+  }
+  .brand h1 .mark{color:var(--accent)}
+  .brand p{margin:0;font-size:13px;color:var(--muted)}
+  .data-tools{display:flex;gap:8px;flex-shrink:0}
+  .ghost-btn{
+    font-size:13px;font-weight:500;color:var(--muted);
+    border:1px solid var(--line);background:var(--surface);
+    padding:8px 12px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;
+    transition:.15s;
+  }
+  .ghost-btn:hover{color:var(--ink);border-color:var(--line-strong);box-shadow:var(--shadow)}
+  .ghost-btn svg{width:15px;height:15px}
+
+  /* ---------- add bar ---------- */
+  .addcard{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:12px;margin-bottom:14px;
+  }
+  .addrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .addrow .txt{
+    flex:1 1 240px;min-width:0;
+    border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:11px 13px;font-size:15.5px;background:var(--surface-2);transition:.15s;
+  }
+  .addrow .txt:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+  .selwrap{position:relative;display:inline-flex}
+  .selwrap select{
+    appearance:none;-webkit-appearance:none;
+    border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:11px 30px 11px 12px;background:var(--surface-2);font-size:13.5px;font-weight:500;
+    color:var(--ink);cursor:pointer;transition:.15s;max-width:46vw;
+  }
+  .selwrap::after{
+    content:"";position:absolute;right:11px;top:50%;width:7px;height:7px;
+    border-right:2px solid var(--faint);border-bottom:2px solid var(--faint);
+    transform:translateY(-65%) rotate(45deg);pointer-events:none;
+  }
+  .selwrap select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .icon-btn{
+    width:42px;height:42px;border-radius:var(--radius-sm);display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);background:var(--surface-2);color:var(--muted);transition:.15s;flex-shrink:0;
+  }
+  .icon-btn svg{width:18px;height:18px}
+  .icon-btn:hover{color:var(--ink);border-color:var(--line-strong)}
+  .icon-btn.danger:hover{color:var(--i-accountable);border-color:#f1c9c9;background:#fdf1f1}
+  .add-go{
+    background:var(--accent);color:#fff;border:1px solid var(--accent);
+    padding:0 18px;height:42px;border-radius:var(--radius-sm);font-weight:600;font-size:14.5px;
+    display:inline-flex;align-items:center;gap:6px;transition:.15s;flex-shrink:0;
+  }
+  .add-go:hover{background:#34326f}
+  .add-go svg{width:16px;height:16px}
+  .duewrap{flex:1 1 100%;display:none;gap:8px;align-items:center;margin-top:2px}
+  .duewrap.show{display:flex}
+  .duewrap input[type=datetime-local]{
+    border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;background:var(--surface-2);
+  }
+  .duewrap label{font-size:13px;color:var(--muted);font-weight:500}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    white-space:nowrap;font-size:13.5px;font-weight:500;color:var(--muted);
+    padding:8px 13px;border-radius:999px;border:1px solid transparent;display:inline-flex;align-items:center;gap:7px;transition:.15s;
+  }
+  .tab:hover{background:var(--surface);color:var(--ink)}
+  .tab.active{background:var(--ink);color:#fff;box-shadow:var(--shadow)}
+  .tab .dot{width:8px;height:8px;border-radius:50%}
+  .tab .cnt{font-size:11.5px;font-weight:600;opacity:.6}
+  .tab.active .cnt{opacity:.8}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .search{position:relative;flex:1 1 200px;min-width:140px}
+  .search input{
+    width:100%;border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:9px 12px 9px 34px;background:var(--surface);font-size:14px;transition:.15s;
+  }
+  .search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--faint)}
+  .controls .selwrap select{padding-top:9px;padding-bottom:9px;background:var(--surface)}
+  .ctl-label{font-size:12px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-right:-2px}
+
+  /* ---------- list ---------- */
+  .group-head{
+    font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);
+    margin:18px 4px 8px;display:flex;align-items:center;gap:8px;
+  }
+  .group-head:first-child{margin-top:2px}
+  .group-head .ln{flex:1;height:1px;background:var(--line)}
+
+  ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .item{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:13px 14px;display:flex;align-items:flex-start;gap:12px;
+    transition:.18s;position:relative;
+  }
+  .item:hover{border-color:var(--line-strong)}
+  .item.pinned{border-color:#f0d9b9;background:linear-gradient(180deg,#fffaf2,#fff)}
+  .item.done{opacity:.55;background:var(--surface-2)}
+  .item.done .label{text-decoration:line-through;color:var(--muted)}
+
+  .check{
+    margin-top:1px;width:23px;height:23px;border-radius:7px;border:2px solid var(--line-strong);
+    flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;transition:.15s;background:#fff;
+  }
+  .check:hover{border-color:var(--accent)}
+  .check svg{width:14px;height:14px;color:#fff;opacity:0;transform:scale(.5);transition:.15s}
+  .check.on{background:var(--accent);border-color:var(--accent)}
+  .check.on svg{opacity:1;transform:scale(1)}
+
+  .body{flex:1;min-width:0}
+  .toprow{display:flex;align-items:center;gap:8px}
+  .pdot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 3px rgba(0,0,0,.03)}
+  .label{font-size:15.5px;font-weight:500;word-break:break-word;flex:1;min-width:0}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;align-items:center}
+  .chip{
+    font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:5px;line-height:1.3;
+  }
+  .chip .cdot{width:7px;height:7px;border-radius:50%}
+  .chip.domain{background:var(--surface-2);border:1px solid var(--line)}
+  .chip.imp{background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+  .chip.urg{background:#eef1f6;color:#525a6b}
+  .chip.shop{background:#e6f6fa;color:#0b6e84}
+  .due{
+    font-weight:700;font-size:13px;padding:4px 10px;border-radius:8px;
+    background:#eef1f6;color:#3a4254;display:inline-flex;align-items:center;gap:6px;letter-spacing:-.005em;
+  }
+  .due svg{width:13px;height:13px}
+  .due.now{background:#fdeaea;color:#bb2d2d}
+  .due.soon{background:#fef3e2;color:#a4631a}
+
+  .acts{display:flex;align-items:center;gap:2px;flex-shrink:0}
+  .mini{
+    width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;
+    color:var(--faint);transition:.15s;
+  }
+  .mini svg{width:16px;height:16px}
+  .mini:hover{background:var(--surface-2);color:var(--ink)}
+  .mini.bubble.on{color:var(--accent)}
+  .mini.bubble.on:hover{color:var(--accent)}
+
+  .empty{
+    text-align:center;padding:60px 20px;color:var(--muted);
+  }
+  .empty .big{font-family:'Fraunces',serif;font-size:21px;color:var(--ink);margin-bottom:6px}
+  .empty p{margin:0;font-size:14px}
+
+  /* history rows are lighter */
+  .hist .item{box-shadow:none;background:var(--surface-2)}
+  .hist .when{font-size:12px;color:var(--faint);font-weight:600;white-space:nowrap}
+
+  /* ---------- modal ---------- */
+  .scrim{
+    position:fixed;inset:0;background:rgba(20,23,32,.42);backdrop-filter:blur(2px);
+    display:flex;align-items:flex-end;justify-content:center;z-index:50;padding:0;opacity:0;pointer-events:none;transition:.18s;
+  }
+  .scrim.show{opacity:1;pointer-events:auto}
+  .modal{
+    background:var(--surface);width:100%;max-width:520px;border-radius:20px 20px 0 0;
+    box-shadow:var(--shadow-pop);max-height:90vh;display:flex;flex-direction:column;
+    transform:translateY(20px);transition:.2s;
+  }
+  .scrim.show .modal{transform:translateY(0)}
+  @media(min-width:560px){
+    .scrim{align-items:center;padding:20px}
+    .modal{border-radius:20px}
+  }
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:18px 20px 12px;border-bottom:1px solid var(--line);
+  }
+  .modal-head h3{margin:0;font-family:'Fraunces',serif;font-weight:600;font-size:19px}
+  .x{width:34px;height:34px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);transition:.15s}
+  .x:hover{background:var(--surface-2);color:var(--ink)}
+  .x svg{width:18px;height:18px}
+  .modal-body{padding:16px 20px;overflow-y:auto}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em}
+  .field input[type=text],.field textarea,.field input[type=datetime-local]{
+    width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:var(--surface-2);transition:.15s;
+  }
+  .field input[type=text]:focus,.field textarea:focus,.field input[type=datetime-local]:focus{
+    outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+  .field textarea{resize:vertical;min-height:120px;line-height:1.5;font-size:15px}
+  .pillrow{display:flex;flex-wrap:wrap;gap:7px}
+  .pill{
+    font-size:13px;font-weight:500;padding:8px 12px;border-radius:999px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--muted);transition:.15s;display:inline-flex;align-items:center;gap:6px;
+  }
+  .pill .cdot{width:8px;height:8px;border-radius:50%}
+  .pill:hover{border-color:var(--line-strong)}
+  .pill.sel{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .modal-foot{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:14px 20px;border-top:1px solid var(--line);
+  }
+  .del-btn{
+    color:var(--i-accountable);font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:7px;
+    padding:9px 12px;border-radius:10px;transition:.15s;
+  }
+  .del-btn:hover{background:#fdf1f1}
+  .del-btn svg{width:16px;height:16px}
+  .save-btn{
+    background:var(--accent);color:#fff;font-weight:600;font-size:14.5px;padding:11px 22px;border-radius:11px;transition:.15s;
+  }
+  .save-btn:hover{background:#34326f}
+
+  .note-edit{width:100%;border:1px solid var(--line);border-radius:12px;padding:14px;min-height:240px;resize:vertical;
+    font-size:15.5px;line-height:1.6;background:var(--surface-2)}
+  .note-edit:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+
+  .hint{font-size:12.5px;color:var(--faint);margin-top:6px}
+
+  /* toast */
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);
+    background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:500;
+    box-shadow:var(--shadow-pop);opacity:0;pointer-events:none;transition:.22s;z-index:80;max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width:520px){
+    .brand h1{font-size:26px}
+    .selwrap select{max-width:40vw}
+    .add-go span{display:none}
+    .add-go{padding:0 13px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app">
+    <div class="brand">
+      <h1>Through<span class="mark">line</span></h1>
+      <p>Everything you're carrying — sorted into one logical order.</p>
+    </div>
+    <div class="data-tools">
+      <button class="ghost-btn" id="exportBtn" title="Download a backup file">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+        Backup
+      </button>
+      <button class="ghost-btn" id="importBtn" title="Restore from a backup file">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0l-4 4m4-4l4 4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+        Restore
+      </button>
+      <input type="file" id="importFile" accept="application/json" hidden />
+    </div>
+  </header>
+
+  <!-- ADD BAR -->
+  <div class="addcard">
+    <div class="addrow">
+      <input class="txt" id="addText" type="text" placeholder="What needs doing?  (try ending one with “set date”)" autocomplete="off" />
+      <div class="selwrap">
+        <select id="addDomain" aria-label="Domain"></select>
+      </div>
+      <div class="selwrap">
+        <select id="addImportance" aria-label="Importance"></select>
+      </div>
+      <div class="selwrap">
+        <select id="addUrgency" aria-label="Urgency"></select>
+      </div>
+      <div class="selwrap" id="addShopWrap" style="display:none">
+        <select id="addShop" aria-label="Shop category"></select>
+      </div>
+      <button class="icon-btn danger" id="addClear" title="Discard this input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+      <button class="add-go" id="addGo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Add</span>
+      </button>
+    </div>
+    <div class="duewrap" id="addDueWrap">
+      <label for="addDue">When:</label>
+      <input type="datetime-local" id="addDue" />
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <nav class="tabs" id="tabs"></nav>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input id="search" type="text" placeholder="Search items…" autocomplete="off" />
+    </div>
+    <span class="ctl-label">Filter</span>
+    <div class="selwrap"><select id="filterImportance"></select></div>
+    <div class="selwrap"><select id="filterUrgency"></select></div>
+    <div class="selwrap" id="filterShopWrap" style="display:none"><select id="filterShop"></select></div>
+    <span class="ctl-label">Sort</span>
+    <div class="selwrap"><select id="sortBy"></select></div>
+  </div>
+
+  <!-- LIST -->
+  <div id="listHost"></div>
+
+</div>
+
+<!-- EDIT MODAL -->
+<div class="scrim" id="editScrim">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h3 id="editTitle">Edit item</h3>
+      <button class="x" id="editClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="eText">Task</label>
+        <input type="text" id="eText" />
+      </div>
+      <div class="field">
+        <label>Domain</label>
+        <div class="pillrow" id="eDomain"></div>
+      </div>
+      <div class="field">
+        <label>Importance</label>
+        <div class="pillrow" id="eImportance"></div>
+      </div>
+      <div class="field">
+        <label>Urgency</label>
+        <div class="pillrow" id="eUrgency"></div>
+      </div>
+      <div class="field" id="eShopField" style="display:none">
+        <label>Shop category</label>
+        <div class="pillrow" id="eShop"></div>
+      </div>
+      <div class="field" id="eDueField" style="display:none">
+        <label for="eDue">Date &amp; time</label>
+        <input type="datetime-local" id="eDue" />
+      </div>
+      <div class="field">
+        <label for="eNotes">Notes &amp; details</label>
+        <textarea id="eNotes" placeholder="Optional — anything extra worth keeping with this item."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="del-btn" id="eDelete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        Delete item
+      </button>
+      <button class="save-btn" id="eSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTES MODAL -->
+<div class="scrim" id="noteScrim">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:560px">
+    <div class="modal-head">
+      <h3>Notes &amp; details</h3>
+      <button class="x" id="noteClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <textarea class="note-edit" id="noteArea" placeholder="Add anything extra here…"></textarea>
+      <div class="hint">Edits save automatically when you close.</div>
+    </div>
+    <div class="modal-foot" style="justify-content:flex-end">
+      <button class="save-btn" id="noteDone">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- SET-DATE PROMPT MODAL -->
+<div class="scrim" id="dateScrim">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h3>Create a dated follow-up</h3>
+      <button class="x" id="dateClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0 0 14px;color:var(--muted);font-size:14px">You ticked an item that said <strong>“set date”</strong>. Want to spin off a new date-specific item?</p>
+      <div class="field">
+        <label for="dText">New task</label>
+        <input type="text" id="dText" />
+      </div>
+      <div class="field">
+        <label for="dDue">Date &amp; time</label>
+        <input type="datetime-local" id="dDue" />
+      </div>
+    </div>
+    <div class="modal-foot" style="justify-content:flex-end;gap:8px">
+      <button class="ghost-btn" id="dSkip" style="padding:11px 16px">Skip</button>
+      <button class="save-btn" id="dCreate">Create item</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ===================== config ===================== */
+const DOMAINS = [
+  {id:"house",      label:"House",        color:"var(--d-house)"},
+  {id:"work",       label:"Work",         color:"var(--d-work)"},
+  {id:"lifeadmin",  label:"Life admin",   color:"var(--d-lifeadmin)"},
+  {id:"health",     label:"Health",       color:"var(--d-health)"},
+  {id:"creativity", label:"Creativity",   color:"var(--d-creativity)"},
+  {id:"shopping",   label:"Shopping list",color:"var(--d-shopping)"},
+];
+const IMPORTANCE = [
+  {id:"accountable",label:"Accountable",color:"var(--i-accountable)",rank:1},
+  {id:"mandatory",  label:"Mandatory",  color:"var(--i-mandatory)",  rank:2},
+  {id:"necessary",  label:"Necessary",  color:"var(--i-necessary)",  rank:3},
+  {id:"preferable", label:"Preferable", color:"var(--i-preferable)", rank:4},
+  {id:"optional",   label:"Optional",   color:"var(--i-optional)",   rank:5},
+];
+const URGENCY = [
+  {id:"datespecific",label:"Date specific",rank:0},
+  {id:"today",       label:"Today",        rank:1},
+  {id:"thisweek",    label:"This week",     rank:2},
+  {id:"thismonth",   label:"This month",    rank:3},
+  {id:"thisyear",    label:"This year",     rank:4},
+  {id:"fiveyear",    label:"5 year plan",   rank:5},
+  {id:"optional",    label:"Optional",      rank:6},
+];
+const SHOP = [
+  {id:"online",   label:"Online"},
+  {id:"general",  label:"General store"},
+  {id:"specialty",label:"Specialty store"},
+  {id:"custom",   label:"Custom order"},
+  {id:"outing",   label:"Dedicated outing"},
+  {id:"thrift",   label:"Thrift"},
+  {id:"share",    label:"Share"},
+];
+const SORTS = [
+  {id:"auto",   label:"Auto (logical)"},
+  {id:"importance",label:"Importance"},
+  {id:"urgency",label:"Urgency"},
+  {id:"domain", label:"Domain"},
+  {id:"due",    label:"Due date"},
+  {id:"created",label:"Date added"},
+  {id:"alpha",  label:"A–Z"},
+];
+
+const map = arr => Object.fromEntries(arr.map(o=>[o.id,o]));
+const DOM_M=map(DOMAINS), IMP_M=map(IMPORTANCE), URG_M=map(URGENCY), SHOP_M=map(SHOP);
+
+/* ===================== state ===================== */
+const KEY="throughline.v1";
+let state = load();
+let ui = { tab:"all", sort:"auto", search:"",
+           fImportance:"", fUrgency:"", fShop:"",
+           editId:null, noteId:null, pendingDateText:"" };
+
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.items)) return p; }
+  }catch(e){}
+  return { items:[] };
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+/* ===================== date helpers ===================== */
+const DAY=86400000;
+function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+function sameDay(a,b){ return startOfDay(a).getTime()===startOfDay(b).getTime(); }
+function dayDiff(due){ return Math.round((startOfDay(due)-startOfDay(new Date()))/DAY); }
+
+function fmtDue(iso){
+  const d=new Date(iso), now=new Date();
+  const time=d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+  const dd=dayDiff(d);
+  const datePart=d.toLocaleDateString([], {weekday:"short",day:"numeric",month:"short"});
+  if(dd<0)  return {cls:"now",  text:"Overdue · "+datePart+" · "+time};
+  if(dd===0)return {cls:"now",  text:"Today · "+time};
+  if(dd===1)return {cls:"soon", text:"Tomorrow · "+time};
+  if(dd<=3) return {cls:"soon", text:"In "+dd+" days · "+datePart+" · "+time};
+  return {cls:"", text:datePart+" · "+time};
+}
+function fmtStamp(iso){
+  const d=new Date(iso);
+  return d.toLocaleDateString([], {weekday:"short",day:"numeric",month:"short"})
+       +" · "+d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+}
+
+/* ===================== build selects/pills ===================== */
+function opt(v,l){ const o=document.createElement("option"); o.value=v; o.textContent=l; return o; }
+function fillSelect(el, list, {placeholder=null, value=""}={}){
+  el.innerHTML="";
+  if(placeholder!==null) el.appendChild(opt("",placeholder));
+  list.forEach(o=>el.appendChild(opt(o.id,o.label)));
+  el.value=value;
+}
+
+fillSelect(addDomain, DOMAINS, {value:"house"});
+fillSelect(addImportance, IMPORTANCE, {placeholder:"Importance"});
+fillSelect(addUrgency, URGENCY, {placeholder:"Urgency"});
+fillSelect(addShop, SHOP, {placeholder:"Shop category"});
+fillSelect(filterImportance, IMPORTANCE, {placeholder:"All importance"});
+fillSelect(filterUrgency, URGENCY, {placeholder:"All urgency"});
+fillSelect(filterShop, SHOP, {placeholder:"All shops"});
+fillSelect(sortBy, SORTS, {value:"auto"});
+
+/* pill groups for edit modal */
+function buildPills(host, list, withDot){
+  host.innerHTML="";
+  list.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="pill"; b.dataset.val=o.id; b.type="button";
+    if(withDot){ const dot=document.createElement("span"); dot.className="cdot"; dot.style.background=o.color||"var(--faint)"; b.appendChild(dot); }
+    b.appendChild(document.createTextNode(o.label));
+    host.appendChild(b);
+  });
+}
+buildPills(eDomain, DOMAINS, true);
+buildPills(eImportance, IMPORTANCE, true);
+buildPills(eUrgency, URGENCY, false);
+buildPills(eShop, SHOP, false);
+
+/* ===================== tabs ===================== */
+function renderTabs(){
+  const counts={}; let all=0;
+  visibleActive().forEach(it=>{ counts[it.domain]=(counts[it.domain]||0)+1; all++; });
+  const histCount=state.items.filter(i=>i.completed).length;
+  const tabs=[{id:"all",label:"All",color:"var(--ink)",count:all},
+    ...DOMAINS.map(d=>({id:d.id,label:d.label,color:d.color,count:counts[d.id]||0})),
+    {id:"history",label:"History",color:"var(--faint)",count:histCount,hist:true}];
+  const host=document.getElementById("tabs"); host.innerHTML="";
+  tabs.forEach(t=>{
+    const b=document.createElement("button");
+    b.className="tab"+(ui.tab===t.id?" active":"");
+    if(!t.hist){ const d=document.createElement("span"); d.className="dot"; d.style.background=t.color; b.appendChild(d); }
+    b.appendChild(document.createTextNode(t.label));
+    const c=document.createElement("span"); c.className="cnt"; c.textContent=t.count; b.appendChild(c);
+    b.onclick=()=>{ ui.tab=t.id; syncControlVisibility(); render(); };
+    host.appendChild(b);
+  });
+}
+
+/* items currently "live" (active, or completed today) */
+function visibleActive(){
+  const now=new Date();
+  return state.items.filter(it=> !it.completed || (it.completedAt && sameDay(it.completedAt, now)) );
+}
+
+function syncControlVisibility(){
+  const shop = ui.tab==="shopping";
+  document.getElementById("filterShopWrap").style.display = shop?"":"none";
+  if(!shop){ ui.fShop=""; filterShop.value=""; }
+}
+
+/* ===================== sorting ===================== */
+function autoScore(it){
+  if(it.completed) return 1e9 + (it.completedAt? new Date(it.completedAt).getTime():0);
+  let urg;
+  if(it.dueDate){
+    const dd=dayDiff(it.dueDate);
+    urg = dd<=0?0 : dd<=3?1 : dd<=7?2 : dd<=31?3 : dd<=365?4 : 5;
+  } else if(it.urgency==="datespecific"){
+    urg = 6.4;
+  } else {
+    urg = it.urgency ? URG_M[it.urgency].rank : 6.5;
+  }
+  const imp = it.importance ? IMP_M[it.importance].rank : 6.5;
+  return urg*10 + imp;
+}
+function cmp(a,b){
+  switch(ui.sort){
+    case "importance":{
+      const r=(a.importance?IMP_M[a.importance].rank:9)-(b.importance?IMP_M[b.importance].rank:9);
+      return r||autoScore(a)-autoScore(b);
+    }
+    case "urgency":{
+      const ua=a.dueDate?-1:(a.urgency?URG_M[a.urgency].rank:9);
+      const ub=b.dueDate?-1:(b.urgency?URG_M[b.urgency].rank:9);
+      return (ua-ub)||autoScore(a)-autoScore(b);
+    }
+    case "domain":{
+      const da=DOMAINS.findIndex(d=>d.id===a.domain), db=DOMAINS.findIndex(d=>d.id===b.domain);
+      return (da-db)||autoScore(a)-autoScore(b);
+    }
+    case "due":{
+      const ta=a.dueDate?new Date(a.dueDate).getTime():Infinity;
+      const tb=b.dueDate?new Date(b.dueDate).getTime():Infinity;
+      return ta-tb || autoScore(a)-autoScore(b);
+    }
+    case "created": return new Date(b.createdAt)-new Date(a.createdAt);
+    case "alpha":   return a.text.toLowerCase().localeCompare(b.text.toLowerCase());
+    default:        return autoScore(a)-autoScore(b)
+                        || (a.dueDate&&b.dueDate? new Date(a.dueDate)-new Date(b.dueDate):0)
+                        || new Date(a.createdAt)-new Date(b.createdAt);
+  }
+}
+
+/* ===================== main render ===================== */
+function render(){
+  renderTabs();
+  // keep filter UI in sync with ui state
+  filterImportance.value=ui.fImportance; filterUrgency.value=ui.fUrgency;
+  filterShop.value=ui.fShop; sortBy.value=ui.sort; search.value=ui.search;
+
+  const host=document.getElementById("listHost"); host.innerHTML="";
+
+  if(ui.tab==="history"){ renderHistory(host); return; }
+
+  let items=visibleActive();
+  if(ui.tab!=="all") items=items.filter(i=>i.domain===ui.tab);
+  if(ui.fImportance) items=items.filter(i=>i.importance===ui.fImportance);
+  if(ui.fUrgency) items=items.filter(i=> ui.fUrgency==="datespecific" ? (i.urgency==="datespecific"||i.dueDate) : i.urgency===ui.fUrgency);
+  if(ui.fShop) items=items.filter(i=>i.shop===ui.fShop);
+  if(ui.search){ const q=ui.search.toLowerCase();
+    items=items.filter(i=> i.text.toLowerCase().includes(q) || (i.notes||"").toLowerCase().includes(q)); }
+
+  items.sort(cmp);
+
+  if(items.length===0){
+    host.innerHTML=`<div class="empty"><div class="big">Nothing here yet</div><p>Add something above, and it'll slot into the right place.</p></div>`;
+    return;
+  }
+
+  // In auto sort, pin due-now/overdue items (current date) to the very top — req 17.
+  // Everything else flows in pure logical order, so date items within 3 days land
+  // among the "today" items — req 18.
+  if(ui.sort==="auto"){
+    const dueNow=items.filter(i=>!i.completed && i.dueDate && dayDiff(i.dueDate)<=0);
+    const rest  =items.filter(i=> !(dueNow.includes(i)) );
+    if(dueNow.length){
+      const h=document.createElement("div"); h.className="group-head";
+      h.innerHTML=`<span>Due now</span><span class="ln"></span>`; host.appendChild(h);
+      const u=document.createElement("ul"); u.className="list";
+      dueNow.forEach(it=>u.appendChild(renderItem(it))); host.appendChild(u);
+      const h2=document.createElement("div"); h2.className="group-head";
+      h2.innerHTML=`<span>Everything else</span><span class="ln"></span>`; host.appendChild(h2);
+    }
+    const u2=document.createElement("ul"); u2.className="list";
+    rest.forEach(it=>u2.appendChild(renderItem(it))); host.appendChild(u2);
+  } else {
+    const ul=document.createElement("ul"); ul.className="list";
+    items.forEach(it=>ul.appendChild(renderItem(it)));
+    host.appendChild(ul);
+  }
+}
+
+function renderItem(it){
+  const li=document.createElement("li");
+  const pinned = !it.completed && it.dueDate && dayDiff(it.dueDate)<=0;
+  li.className="item"+(it.completed?" done":"")+(pinned?" pinned":"");
+
+  // checkbox
+  const ck=document.createElement("button");
+  ck.className="check"+(it.completed?" on":""); ck.title=it.completed?"Mark not done":"Mark done";
+  ck.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>`;
+  ck.onclick=()=>toggleDone(it.id);
+  li.appendChild(ck);
+
+  const body=document.createElement("div"); body.className="body";
+
+  const top=document.createElement("div"); top.className="toprow";
+  const dot=document.createElement("span"); dot.className="pdot";
+  dot.style.background = it.importance?IMP_M[it.importance].color:"var(--i-optional)";
+  dot.title = it.importance?IMP_M[it.importance].label:"No importance set";
+  top.appendChild(dot);
+  const lab=document.createElement("span"); lab.className="label"; lab.textContent=it.text;
+  top.appendChild(lab);
+  body.appendChild(top);
+
+  // meta chips
+  const meta=document.createElement("div"); meta.className="meta";
+  if(it.dueDate){
+    const f=fmtDue(it.dueDate);
+    const due=document.createElement("span"); due.className="due "+f.cls;
+    due.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`+f.text;
+    meta.appendChild(due);
+  }
+  if(ui.tab==="all"){
+    const d=DOM_M[it.domain];
+    const c=document.createElement("span"); c.className="chip domain";
+    c.innerHTML=`<span class="cdot" style="background:${d.color}"></span>`+d.label;
+    meta.appendChild(c);
+  }
+  if(it.importance){
+    const c=document.createElement("span"); c.className="chip imp";
+    c.innerHTML=`<span class="cdot" style="background:${IMP_M[it.importance].color}"></span>`+IMP_M[it.importance].label;
+    meta.appendChild(c);
+  }
+  if(it.urgency && it.urgency!=="datespecific"){
+    const c=document.createElement("span"); c.className="chip urg"; c.textContent=URG_M[it.urgency].label;
+    meta.appendChild(c);
+  }
+  if(it.domain==="shopping" && it.shop){
+    const c=document.createElement("span"); c.className="chip shop"; c.textContent=SHOP_M[it.shop].label;
+    meta.appendChild(c);
+  }
+  if(meta.children.length) body.appendChild(meta);
+  li.appendChild(body);
+
+  // actions
+  const acts=document.createElement("div"); acts.className="acts";
+  // speech bubble (only if notes)
+  if(it.notes && it.notes.trim()){
+    const nb=document.createElement("button"); nb.className="mini bubble on"; nb.title="View notes";
+    nb.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.5 7.2L4 20l1-4.5A8 8 0 1121 12z"/></svg>`;
+    nb.onclick=()=>openNotes(it.id);
+    acts.appendChild(nb);
+  }
+  const ed=document.createElement("button"); ed.className="mini"; ed.title="Edit";
+  ed.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>`;
+  ed.onclick=()=>openEdit(it.id);
+  acts.appendChild(ed);
+  li.appendChild(acts);
+
+  return li;
+}
+
+function renderHistory(host){
+  const done=state.items.filter(i=>i.completed)
+    .sort((a,b)=>new Date(b.completedAt)-new Date(a.completedAt));
+  if(!done.length){
+    host.innerHTML=`<div class="empty"><div class="big">No history yet</div><p>Ticked-off items land here with the time you completed them.</p></div>`;
+    return;
+  }
+  // group by day
+  const wrap=document.createElement("div"); wrap.className="hist";
+  let lastDay="";
+  done.forEach(it=>{
+    const dKey=startOfDay(it.completedAt).toDateString();
+    if(dKey!==lastDay){
+      lastDay=dKey;
+      const label=sameDay(it.completedAt,new Date())?"Today"
+        : sameDay(it.completedAt,new Date(Date.now()-DAY))?"Yesterday"
+        : new Date(it.completedAt).toLocaleDateString([], {weekday:"long",day:"numeric",month:"long"});
+      const h=document.createElement("div"); h.className="group-head";
+      h.innerHTML=`<span>${label}</span><span class="ln"></span>`; wrap.appendChild(h);
+    }
+    const li=document.createElement("div"); li.className="item";
+    const dot=DOM_M[it.domain];
+    li.innerHTML=`
+      <span class="check on" style="cursor:default"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg></span>
+      <div class="body">
+        <div class="toprow"><span class="pdot" style="background:${dot.color}"></span><span class="label">${escapeHtml(it.text)}</span></div>
+      </div>`;
+    const acts=document.createElement("div"); acts.className="acts";
+    if(it.notes && it.notes.trim()){
+      const nb=document.createElement("button"); nb.className="mini bubble on"; nb.title="View notes";
+      nb.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.5 7.2L4 20l1-4.5A8 8 0 1121 12z"/></svg>`;
+      nb.onclick=()=>openNotes(it.id);
+      acts.appendChild(nb);
+    }
+    const when=document.createElement("span"); when.className="when";
+    when.textContent=it.completedAt?fmtStamp(it.completedAt):"";
+    acts.appendChild(when);
+    li.appendChild(acts);
+    wrap.appendChild(li);
+  });
+  host.appendChild(wrap);
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+
+/* ===================== actions ===================== */
+function addItem(){
+  const text=addText.value.trim();
+  if(!text){ addText.focus(); return; }
+  const domain=addDomain.value;
+  const urgency=addUrgency.value;
+  const it={
+    id:uid(), text, domain,
+    importance:addImportance.value||"",
+    urgency:urgency||"",
+    shop: domain==="shopping" ? (addShop.value||"") : "",
+    dueDate: (urgency==="datespecific" && addDue.value) ? new Date(addDue.value).toISOString() : null,
+    notes:"", completed:false, completedAt:null, createdAt:new Date().toISOString()
+  };
+  state.items.push(it); save();
+  clearAdd();
+  render();
+}
+function clearAdd(){
+  addText.value=""; addImportance.value=""; addUrgency.value=""; addShop.value=""; addDue.value="";
+  addShopWrap.style.display="none"; addDueWrap.classList.remove("show");
+  addText.focus();
+}
+
+function toggleDone(id){
+  const it=state.items.find(i=>i.id===id); if(!it) return;
+  if(!it.completed){
+    it.completed=true; it.completedAt=new Date().toISOString();
+    if(/\bset date\b/i.test(it.text)) promptSetDate(it.text);
+    toast("Done — stays greyed until end of day");
+  } else {
+    it.completed=false; it.completedAt=null;
+  }
+  save(); render();
+}
+
+/* ---- edit modal ---- */
+function openEdit(id){
+  const it=state.items.find(i=>i.id===id); if(!it) return;
+  ui.editId=id;
+  eText.value=it.text;
+  setPills(eDomain, it.domain);
+  setPills(eImportance, it.importance);
+  setPills(eUrgency, it.urgency);
+  setPills(eShop, it.shop);
+  eNotes.value=it.notes||"";
+  eDue.value = it.dueDate ? toLocalInput(it.dueDate) : "";
+  reflectEditConditionals();
+  showScrim(editScrim);
+}
+function reflectEditConditionals(){
+  const dom=getPills(eDomain), urg=getPills(eUrgency);
+  eShopField.style.display = dom==="shopping" ? "" : "none";
+  eDueField.style.display  = urg==="datespecific" ? "" : "none";
+}
+function setPills(host,val){
+  [...host.children].forEach(b=>b.classList.toggle("sel", b.dataset.val===val));
+}
+function getPills(host){
+  const sel=host.querySelector(".pill.sel"); return sel?sel.dataset.val:"";
+}
+function saveEdit(){
+  const it=state.items.find(i=>i.id===ui.editId); if(!it) return;
+  it.text=eText.value.trim()||it.text;
+  it.domain=getPills(eDomain)||it.domain;
+  it.importance=getPills(eImportance);
+  it.urgency=getPills(eUrgency);
+  it.shop = it.domain==="shopping" ? getPills(eShop) : "";
+  it.dueDate = it.urgency==="datespecific" && eDue.value ? new Date(eDue.value).toISOString() : (it.urgency==="datespecific"?it.dueDate:null);
+  it.notes=eNotes.value;
+  save(); hideScrim(editScrim); render();
+}
+function deleteItem(){
+  state.items=state.items.filter(i=>i.id!==ui.editId);
+  save(); hideScrim(editScrim); render(); toast("Item deleted");
+}
+
+/* ---- notes modal ---- */
+function openNotes(id){
+  ui.noteId=id;
+  const it=state.items.find(i=>i.id===id);
+  noteArea.value=it?(it.notes||""):"";
+  showScrim(noteScrim); setTimeout(()=>noteArea.focus(),120);
+}
+function closeNotes(){
+  const it=state.items.find(i=>i.id===ui.noteId);
+  if(it){ it.notes=noteArea.value; save(); }
+  hideScrim(noteScrim); render();
+}
+
+/* ---- set-date prompt ---- */
+function promptSetDate(srcText){
+  ui.pendingDateText = srcText.replace(/\bset date\b/i,"").replace(/\s{2,}/g," ").trim() || "Follow-up";
+  dText.value=ui.pendingDateText;
+  const t=new Date(Date.now()+DAY); t.setHours(9,0,0,0);
+  dDue.value=toLocalInput(t.toISOString());
+  showScrim(dateScrim);
+}
+function createDated(){
+  const text=dText.value.trim(); if(!text){ dText.focus(); return; }
+  state.items.push({
+    id:uid(), text, domain:"lifeadmin", importance:"", urgency:"datespecific",
+    shop:"", dueDate: dDue.value?new Date(dDue.value).toISOString():null,
+    notes:"", completed:false, completedAt:null, createdAt:new Date().toISOString()
+  });
+  save(); hideScrim(dateScrim); render(); toast("Dated item created");
+}
+
+/* ===================== modal plumbing ===================== */
+function showScrim(s){ s.classList.add("show"); }
+function hideScrim(s){ s.classList.remove("show"); }
+
+/* ===================== misc ===================== */
+function toLocalInput(iso){
+  const d=new Date(iso); const p=n=>String(n).padStart(2,"0");
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes());
+}
+let toastT;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* ===================== backup / restore ===================== */
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=url; a.download="throughline-backup-"+new Date().toISOString().slice(0,10)+".json";
+  a.click(); URL.revokeObjectURL(url); toast("Backup downloaded");
+}
+function importData(file){
+  const r=new FileReader();
+  r.onload=()=>{ try{
+      const p=JSON.parse(r.result);
+      if(p&&Array.isArray(p.items)){ state=p; save(); render(); toast("Backup restored"); }
+      else toast("That file didn't look right");
+    }catch(e){ toast("Couldn't read that file"); } };
+  r.readAsText(file);
+}
+
+/* ===================== wiring ===================== */
+addGo.onclick=addItem;
+addClear.onclick=clearAdd;
+addText.addEventListener("keydown",e=>{ if(e.key==="Enter") addItem(); });
+addDomain.addEventListener("change",()=>{ addShopWrap.style.display = addDomain.value==="shopping"?"":"none"; });
+addUrgency.addEventListener("change",()=>{ addDueWrap.classList.toggle("show", addUrgency.value==="datespecific"); });
+
+search.addEventListener("input",()=>{ ui.search=search.value.trim(); render(); });
+filterImportance.addEventListener("change",()=>{ ui.fImportance=filterImportance.value; render(); });
+filterUrgency.addEventListener("change",()=>{ ui.fUrgency=filterUrgency.value; render(); });
+filterShop.addEventListener("change",()=>{ ui.fShop=filterShop.value; render(); });
+sortBy.addEventListener("change",()=>{ ui.sort=sortBy.value; render(); });
+
+// edit modal
+editClose.onclick=()=>hideScrim(editScrim);
+eSave.onclick=saveEdit;
+eDelete.onclick=deleteItem;
+eDomain.addEventListener("click",e=>{ const b=e.target.closest(".pill"); if(b){ setPills(eDomain,b.dataset.val); reflectEditConditionals(); }});
+eImportance.addEventListener("click",e=>{ const b=e.target.closest(".pill"); if(b) setPills(eImportance,b.dataset.val); });
+eUrgency.addEventListener("click",e=>{ const b=e.target.closest(".pill"); if(b){ setPills(eUrgency,b.dataset.val); reflectEditConditionals(); }});
+eShop.addEventListener("click",e=>{ const b=e.target.closest(".pill"); if(b) setPills(eShop,b.dataset.val); });
+
+// notes modal
+noteClose.onclick=closeNotes;
+noteDone.onclick=closeNotes;
+
+// date modal
+dateClose.onclick=()=>hideScrim(dateScrim);
+dSkip.onclick=()=>hideScrim(dateScrim);
+dCreate.onclick=createDated;
+
+// backup
+exportBtn.onclick=exportData;
+importBtn.onclick=()=>importFile.click();
+importFile.onchange=()=>{ if(importFile.files[0]) importData(importFile.files[0]); importFile.value=""; };
+
+// click scrim background to close (not the date prompt — that has explicit skip)
+[editScrim,noteScrim].forEach(s=>s.addEventListener("mousedown",e=>{ if(e.target===s){ if(s===noteScrim) closeNotes(); else hideScrim(s);} }));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(noteScrim.classList.contains("show")) closeNotes();
+  [editScrim,dateScrim].forEach(hideScrim); }});
+
+// refresh every minute so dates roll over and completed-today items clear at midnight
+setInterval(render, 60000);
+
+/* go */
+syncControlVisibility();
+render();
+addText.focus();
+</script>
+</body>
+</html>

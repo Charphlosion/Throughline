@@ -297,15 +297,77 @@
   }
   .toast.show{opacity:1;transform:translate(-50%,0)}
 
+  /* sync pill */
+  .sync-pill{
+    display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);background:var(--surface);padding:7px 11px;border-radius:10px;white-space:nowrap;
+  }
+  .sync-pill .sdot{width:8px;height:8px;border-radius:50%;background:var(--faint);transition:.2s}
+  .sync-pill.ok .sdot{background:var(--d-health)}
+  .sync-pill.saving .sdot{background:var(--i-mandatory);animation:pulse 1s infinite}
+  .sync-pill.err .sdot{background:var(--i-accountable)}
+  @keyframes pulse{50%{opacity:.35}}
+
+  /* login overlay */
+  .login{
+    position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:20px;
+    background:
+      radial-gradient(1000px 500px at 80% -10%, var(--bg-grad-b), transparent 60%),
+      radial-gradient(800px 460px at 0% 0%, var(--bg-grad-a), transparent 55%),
+      var(--bg);
+  }
+  .login.show{display:flex}
+  .login-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-pop);
+    width:100%;max-width:380px;padding:30px 26px;
+  }
+  .login-card h2{font-family:'Fraunces',serif;font-weight:600;font-size:27px;margin:0 0 4px}
+  .login-card h2 .mark{color:var(--accent)}
+  .login-card .sub{color:var(--muted);font-size:13.5px;margin:0 0 22px}
+  .login-card label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.03em}
+  .login-card input{
+    width:100%;border:1px solid var(--line);border-radius:11px;padding:12px 13px;background:var(--surface-2);
+    margin-bottom:14px;transition:.15s;font-size:15px;
+  }
+  .login-card input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+  .login-card .primary{
+    width:100%;background:var(--accent);color:#fff;font-weight:600;font-size:15px;padding:13px;border-radius:12px;transition:.15s;
+  }
+  .login-card .primary:hover{background:#34326f}
+  .login-card .secondary{
+    width:100%;background:none;color:var(--accent);font-weight:600;font-size:13.5px;padding:11px;margin-top:4px;
+  }
+  .login-card .secondary:hover{text-decoration:underline}
+  .login-msg{font-size:13px;margin:2px 0 12px;min-height:18px}
+  .login-msg.error{color:var(--i-accountable)}
+  .login-msg.note{color:var(--d-health)}
+
   @media (max-width:520px){
     .brand h1{font-size:26px}
     .selwrap select{max-width:40vw}
     .add-go span{display:none}
     .add-go{padding:0 13px}
+    .sync-pill #syncText{display:none}
+    .ghost-btn span{display:inline}
   }
 </style>
 </head>
 <body>
+
+<!-- LOGIN OVERLAY (only used once Supabase keys are added) -->
+<div class="login" id="loginOverlay">
+  <div class="login-card">
+    <h2>Through<span class="mark">line</span></h2>
+    <p class="sub">Sign in to sync your list across every device.</p>
+    <label for="liEmail">Email</label>
+    <input type="email" id="liEmail" autocomplete="username" placeholder="you@example.com" />
+    <label for="liPass">Password</label>
+    <input type="password" id="liPass" autocomplete="current-password" placeholder="Your password" />
+    <div class="login-msg" id="liMsg"></div>
+    <button class="primary" id="liLogin">Log in</button>
+    <button class="secondary" id="liSignup">First time here? Create an account</button>
+  </div>
+</div>
 <div class="wrap">
 
   <header class="app">
@@ -314,6 +376,7 @@
       <p>Everything you're carrying — sorted into one logical order.</p>
     </div>
     <div class="data-tools">
+      <span class="sync-pill" id="syncPill" title="Sync status"><span class="sdot"></span><span id="syncText">Local only</span></span>
       <button class="ghost-btn" id="exportBtn" title="Download a backup file">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
         Backup
@@ -321,6 +384,10 @@
       <button class="ghost-btn" id="importBtn" title="Restore from a backup file">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0l-4 4m4-4l4 4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
         Restore
+      </button>
+      <button class="ghost-btn" id="logoutBtn" title="Log out" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5M21 12H9M12 21H5a2 2 0 01-2-2V5a2 2 0 012-2h7"/></svg>
+        Log out
       </button>
       <input type="file" id="importFile" accept="application/json" hidden />
     </div>
@@ -469,8 +536,19 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Cloud sync library (loads from CDN; only used once you add your keys below) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
+
+/* =======================================================================
+   CLOUD SYNC SETUP — paste your two Supabase values between the quotes.
+   Leave them blank to keep Throughline saving only on this device.
+   (Step-by-step instructions came with this file.)
+   ======================================================================= */
+const SUPABASE_URL      = "https://wiatyxaabjobvqlmesye.supabase.co/rest/v1/";   // e.g. "https://abcdefgh.supabase.co"
+const SUPABASE_ANON_KEY = "sb_publishable_uWzaeDNoXpGxQ1zS1peG0Q__rBU7hvh";   // the long "anon public" key
+/* ===================================================================== */
 
 /* ===================== config ===================== */
 const DOMAINS = [
@@ -526,14 +604,72 @@ let ui = { tab:"all", sort:"auto", search:"",
            fImportance:"", fUrgency:"", fShop:"",
            editId:null, noteId:null, pendingDateText:"" };
 
+/* cloud sync runtime */
+const CLOUD_ON = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+let sb=null, sbUser=null, saveTimer=null;
+
 function load(){
   try{
     const raw=localStorage.getItem(KEY);
     if(raw){ const p=JSON.parse(raw); if(p&&Array.isArray(p.items)) return p; }
   }catch(e){}
-  return { items:[] };
+  return { items:[], savedAt:0 };
 }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function saveLocal(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+}
+/* save() is called everywhere a change happens: stamp it, cache locally, push to cloud */
+function save(){
+  state.savedAt = Date.now();
+  saveLocal();
+  if(CLOUD_ON && sbUser) scheduleCloudPush();
+}
+function scheduleCloudPush(){
+  setSync("saving");
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(cloudPush, 700);
+}
+async function cloudPush(){
+  if(!sb||!sbUser) return;
+  try{
+    const {error}=await sb.from("throughline_data")
+      .upsert({user_id:sbUser.id, data:state, updated_at:new Date().toISOString()});
+    if(error) throw error;
+    setSync("ok");
+  }catch(e){ setSync("err"); }
+}
+async function cloudPull(){
+  if(!sb||!sbUser) return;
+  try{
+    const {data,error}=await sb.from("throughline_data")
+      .select("data").eq("user_id",sbUser.id).maybeSingle();
+    if(error) throw error;
+    if(data && data.data && Array.isArray(data.data.items)){
+      const cloud=data.data;
+      const localT=state.savedAt||0, cloudT=cloud.savedAt||0;
+      if(localT>cloudT){           // unsynced local changes are newer -> push them up
+        await cloudPush();
+      }else{                       // cloud is newer or equal -> adopt it
+        state=cloud; saveLocal();
+      }
+    }else{                         // no row yet -> seed cloud with whatever we have locally
+      await cloudPush();
+    }
+    setSync("ok");
+  }catch(e){ setSync("err"); }
+}
+
+/* sync pill */
+function setSync(s){
+  const pill=document.getElementById("syncPill"), txt=document.getElementById("syncText");
+  if(!pill) return;
+  pill.classList.remove("ok","saving","err");
+  if(!CLOUD_ON){ txt.textContent="Local only"; return; }
+  if(s==="saving"){ pill.classList.add("saving"); txt.textContent="Saving…"; }
+  else if(s==="err"){ pill.classList.add("err"); txt.textContent="Offline"; }
+  else { pill.classList.add("ok"); txt.textContent="Synced"; }
+}
+
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
 /* ===================== date helpers ===================== */
@@ -1016,10 +1152,69 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(noteScrim.clas
 // refresh every minute so dates roll over and completed-today items clear at midnight
 setInterval(render, 60000);
 
-/* go */
+/* ===================== cloud auth ===================== */
+function setLoginMsg(t,kind){ const m=document.getElementById("liMsg"); m.textContent=t||""; m.className="login-msg"+(kind?" "+kind:""); }
+function showLogin(){ document.getElementById("loginOverlay").classList.add("show"); document.getElementById("logoutBtn").style.display="none"; }
+function hideLogin(){ document.getElementById("loginOverlay").classList.remove("show"); }
+
+async function initCloud(){
+  if(!(window.supabase && window.supabase.createClient)){ setSync("err"); addText.focus(); return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY,
+        { auth:{ persistSession:true, autoRefreshToken:true } });
+  setSync("saving");
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session && session.user){ await onAuthed(session.user); }
+    else { showLogin(); }
+  }catch(e){ setSync("err"); showLogin(); }
+}
+async function onAuthed(user){
+  sbUser=user;
+  hideLogin();
+  document.getElementById("logoutBtn").style.display="";
+  setSync("saving");
+  await cloudPull();
+  render();
+  setLoginMsg("");
+}
+async function doLogin(){
+  const email=liEmail.value.trim(), pass=liPass.value;
+  if(!email||!pass){ setLoginMsg("Enter your email and password.","error"); return; }
+  setLoginMsg("Signing in…","note");
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error){ setLoginMsg(error.message,"error"); return; }
+    await onAuthed(data.user);
+  }catch(e){ setLoginMsg("Couldn't reach the server. Check your connection.","error"); }
+}
+async function doSignup(){
+  const email=liEmail.value.trim(), pass=liPass.value;
+  if(!email || pass.length<6){ setLoginMsg("Use a real email and a password of at least 6 characters.","error"); return; }
+  setLoginMsg("Creating your account…","note");
+  try{
+    const {data,error}=await sb.auth.signUp({email,password:pass});
+    if(error){ setLoginMsg(error.message,"error"); return; }
+    if(data.session && data.user){ await onAuthed(data.user); }
+    else { setLoginMsg("Account made — check your email to confirm, then tap Log in.","note"); }
+  }catch(e){ setLoginMsg("Couldn't reach the server. Check your connection.","error"); }
+}
+async function doLogout(){
+  try{ if(sb) await sb.auth.signOut(); }catch(e){}
+  sbUser=null;
+  document.getElementById("logoutBtn").style.display="none";
+  showLogin();
+}
+liLogin.onclick=doLogin;
+liSignup.onclick=doSignup;
+logoutBtn.onclick=doLogout;
+liPass.addEventListener("keydown",e=>{ if(e.key==="Enter") doLogin(); });
+
+/* ===================== go ===================== */
 syncControlVisibility();
-render();
-addText.focus();
+render();                       // show local-cached list immediately
+setSync(CLOUD_ON?"saving":"local");
+if(CLOUD_ON){ initCloud(); }
+else { addText.focus(); }
 </script>
 </body>
 </html>

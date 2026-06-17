@@ -698,6 +698,7 @@ function fmtStamp(iso){
 /* ===================== build selects/pills ===================== */
 function opt(v,l){ const o=document.createElement("option"); o.value=v; o.textContent=l; return o; }
 function fillSelect(el, list, {placeholder=null, value=""}={}){
+  if(!el) return;
   el.innerHTML="";
   if(placeholder!==null) el.appendChild(opt("",placeholder));
   list.forEach(o=>el.appendChild(opt(o.id,o.label)));
@@ -771,7 +772,7 @@ function autoScore(it){
   } else if(it.urgency==="datespecific"){
     urg = 6.4;
   } else {
-    urg = it.urgency ? URG_M[it.urgency].rank : 6.5;
+    urg = it.urgency ? (URG_M[it.urgency] ? URG_M[it.urgency].rank : 6.5) : 6.5;
   }
   const imp = it.importance ? IMP_M[it.importance].rank : 6.5;
   return urg*10 + imp;
@@ -783,8 +784,8 @@ function cmp(a,b){
       return r||autoScore(a)-autoScore(b);
     }
     case "urgency":{
-      const ua=a.dueDate?-1:(a.urgency?URG_M[a.urgency].rank:9);
-      const ub=b.dueDate?-1:(b.urgency?URG_M[b.urgency].rank:9);
+      const ua=a.dueDate?-1:(a.urgency?URG_M[a.urgency]?URG_M[a.urgency].rank:9:9);
+      const ub=b.dueDate?-1:(b.urgency?URG_M[b.urgency]?URG_M[b.urgency].rank:9:9);
       return (ua-ub)||autoScore(a)-autoScore(b);
     }
     case "domain":{
@@ -884,7 +885,7 @@ function renderItem(it){
     due.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`+f.text;
     meta.appendChild(due);
   }
-  if(ui.tab==="all"){
+  if(ui.tab==="all" && DOM_M[it.domain]){
     const d=DOM_M[it.domain];
     const c=document.createElement("span"); c.className="chip domain";
     c.innerHTML=`<span class="cdot" style="background:${d.color}"></span>`+d.label;
@@ -896,7 +897,7 @@ function renderItem(it){
     meta.appendChild(c);
   }
   if(it.urgency && it.urgency!=="datespecific"){
-    const c=document.createElement("span"); c.className="chip urg"; c.textContent=URG_M[it.urgency].label;
+    const c=document.createElement("span"); c.className="chip urg"; c.textContent=URG_M[it.urgency]?URG_M[it.urgency].label:it.urgency;
     meta.appendChild(c);
   }
   if(it.domain==="shopping" && it.shop){
@@ -1036,7 +1037,7 @@ function saveEdit(){
   it.importance=getPills(eImportance);
   it.urgency=getPills(eUrgency);
   it.shop = it.domain==="shopping" ? getPills(eShop) : "";
-  it.dueDate = it.urgency==="datespecific" && eDue.value ? new Date(eDue.value).toISOString() : (it.urgency==="datespecific"?it.dueDate:null);
+  it.dueDate = it.urgency==="datespecific" ? (eDue.value ? new Date(eDue.value).toISOString() : null) : null;
   it.notes=eNotes.value;
   save(); hideScrim(editScrim); render();
 }
@@ -1164,7 +1165,7 @@ async function initCloud(){
   setSync("saving");
   try{
     const { data:{ session } } = await sb.auth.getSession();
-    if(session && session.user){ await onAuthed(session.user); }
+    if(session && session.user){ try{ await onAuthed(session.user); }catch(e){ setSync("err"); showLogin(); } }
     else { showLogin(); }
   }catch(e){ setSync("err"); showLogin(); }
 }
